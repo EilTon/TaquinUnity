@@ -1,4 +1,4 @@
-interface IRelease
+interface IRelease<Tile>
 {
-    void Release();
+    void Release(Tile tile);
 }

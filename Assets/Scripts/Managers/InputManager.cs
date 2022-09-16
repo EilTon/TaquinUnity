@@ -6,15 +6,16 @@ public class InputManager : MonoBehaviour
 {
     #region Declarations
     public static InputManager instance;
-    bool isTouch = false;
-    Vector3 touchPosition;
-    Camera cameraInteraction;
-    Ray ray;
-    RaycastHit hit = new RaycastHit();
-    Tile currentTile;
-    IClick currentClickObject;
-    IDrag<Vector3> currentDragObject;
-    IRelease currentReleaseObject;
+    public float dragDistanceFromCamera = 4;
+    private bool isTouch = false;
+    private Vector3 touchPosition;
+    private Camera cameraInteraction;
+    private Ray ray;
+    private RaycastHit hit = new RaycastHit();
+    private Tile currentTile, emptyTile;
+    private IClick currentClickObject;
+    private IDrag<Vector3> currentDragObject;
+    private IRelease<Tile> currentReleaseObject;
     #endregion
 
     void Awake()
@@ -29,7 +30,7 @@ public class InputManager : MonoBehaviour
         Click();
         Drag();
         Release();
-    
+
     }
 
     #region Movement Functions
@@ -40,11 +41,12 @@ public class InputManager : MonoBehaviour
         if (isTouch && currentTile == null)
         {
             ray = ScreenCast();
-            if(Physics.Raycast(ray,out hit,100f))
+            if (Physics.Raycast(ray, out hit, 100f))
             {
                 currentTile = hit.collider.gameObject.GetComponent<Tile>();
-                if(currentTile != null && currentTile is IClick)
+                if (currentTile != null && currentTile is IClick)
                 {
+                    currentTile.SetCollider(false);
                     currentClickObject = (IClick)currentTile;
                     currentClickObject.Click();
                 }
@@ -54,17 +56,17 @@ public class InputManager : MonoBehaviour
 
     private void Drag()
     {
-        
+
         if (isTouch)
         {
-            if(currentTile!=null)
+            if (currentTile != null)
             {
-                if(currentTile is IDrag<Vector3>)
+                if (currentTile is IDrag<Vector3>)
                 {
-                    
+
                     currentDragObject = (IDrag<Vector3>)currentTile;
-                    ray=ScreenCast();
-                    currentDragObject.Drag(ray.origin + ray.direction);
+                    ray = ScreenCast();
+                    currentDragObject.Drag(ray.origin + ray.direction * dragDistanceFromCamera);
                 }
             }
         }
@@ -74,15 +76,26 @@ public class InputManager : MonoBehaviour
     {
         if (!isTouch)
         {
-            if(currentTile != null)
+            if (currentTile != null)
             {
-                if(currentTile is IRelease)
+                if (currentTile is IRelease<Tile>)
                 {
                     ray = ScreenCast();
-                    currentReleaseObject = (IRelease)currentTile;
-                    currentReleaseObject.Release();
+                    if (Physics.Raycast(ray, out hit, 100f))
+                    {
+                        if (hit.collider.gameObject.GetComponent<Tile>().GetEmptySpace())
+                        {
+                            emptyTile = hit.collider.gameObject.GetComponent<Tile>();
+                        }
+                    }
+
+                    currentReleaseObject = (IRelease<Tile>)currentTile;
+                    currentTile.SetCollider(true);
+                    currentReleaseObject.Release(emptyTile);
+
                     currentTile = null;
                     currentReleaseObject = null;
+                    emptyTile = null;
                 }
             }
         }

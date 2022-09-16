@@ -7,7 +7,9 @@ public class TileManager : MonoBehaviour
 {
     // Start is called before the first frame update
     public GameObject tile;
-    List<GameObject> tiles = new List<GameObject>();
+    private List<GameObject> tiles = new List<GameObject>();
+    private float x = 0;
+    private float y = 0;
 
     void Start()
     {
@@ -21,28 +23,40 @@ public class TileManager : MonoBehaviour
         {
             if (Application.platform == RuntimePlatform.Android)
             {
-                CreateTile("Android/" + (i + 1));
+                CreateTile("Android/" + (i + 1), i);
             }
             else if (Application.platform == RuntimePlatform.IPhonePlayer)
             {
-                CreateTile("Apple/" + (i + 1));
+                CreateTile("Apple/" + (i + 1), i);
             }
             else
             {
-                CreateTile("Android/" + (i + 1));
+                CreateTile("Android/" + (i + 1), i);
             }
         }
 
-        Destroy(tiles[Mathf.CeilToInt(tiles.Count/2)]);    
-    
-        }
+        GameObject emptySpace = tiles[Mathf.CeilToInt(tiles.Count/2)].gameObject; 
+        emptySpace.name ="EmptySpace";
+        emptySpace.GetComponent<SpriteRenderer>().sprite = null;
+        emptySpace.GetComponent<Tile>().SetEmptySpace(true);  
 
-    private void CreateTile(string path)
+    }
+
+    private void CreateTile(string path, int countLoop)
     {
         GameObject newTile = Object.Instantiate(tile);
         newTile.transform.SetParent(this.transform);
-        //newTile.transform.position = ;
+        newTile.transform.position = new Vector3(x, y, 0);
         newTile.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(path);
+        if (x == 10.24f)
+        {
+            x = 0;
+            y = y - 5.12f;
+        }
+        else
+        {
+            x = x + 5.12f;
+        }
         tiles.Add(newTile);
     }
 }
