@@ -2,27 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// Script handle input from player
 public class InputManager : MonoBehaviour
 {
     #region Declarations
-    public static InputManager instance;
-    public float dragDistanceFromCamera = 4;
-    private bool isTouch = false;
-    private Vector3 touchPosition;
-    private Camera cameraInteraction;
-    private Ray ray;
-    private RaycastHit hit = new RaycastHit();
-    private Tile currentTile, emptyTile;
+    public Camera cameraInteraction; // camera where the player play
+    public float dragDistanceFromCamera = 4; //offset when the player grab a tile
+    private bool isTouch = false; // boolean if the player touch or not
+    private Vector3 touchPosition; // position where the player touch
+    private Ray ray; // ray convert from screenPoint 
+    private RaycastHit hit = new RaycastHit(); // what the player hit with the ray
+    private Tile currentTile, emptyTile; // tile the play has grab and a ref from the emptyTile
     private IClick currentClickObject;
     private IDrag<Vector3> currentDragObject;
     private IRelease<Tile> currentReleaseObject;
     #endregion
 
-    void Awake()
-    {
-        CreateSingleton();
-        cameraInteraction = Camera.main;
-    }
+    #region Unity Functions 
 
     void Update()
     {
@@ -33,9 +29,11 @@ public class InputManager : MonoBehaviour
 
     }
 
+    #endregion
+
     #region Movement Functions
 
-
+    //when the player touch
     private void Click()
     {
         if (isTouch && currentTile == null)
@@ -53,7 +51,7 @@ public class InputManager : MonoBehaviour
             }
         }
     }
-
+    //when the player drag is touch
     private void Drag()
     {
 
@@ -72,6 +70,7 @@ public class InputManager : MonoBehaviour
         }
     }
 
+    //when the player release is touch
     private void Release()
     {
         if (!isTouch)
@@ -105,24 +104,14 @@ public class InputManager : MonoBehaviour
 
     #region System Functions
 
+    // function get input from player
     private void GetInputs()
     {
         isTouch = Input.GetMouseButton(0);
         touchPosition = Input.mousePosition;
     }
 
-    private void CreateSingleton()
-    {
-        if (instance != null)
-        {
-            Destroy(gameObject);
-        }
-        else
-        {
-            instance = this;
-        }
-    }
-
+    //convert where the player touch into a ray
     private Ray ScreenCast()
     {
         return cameraInteraction.ScreenPointToRay(touchPosition);

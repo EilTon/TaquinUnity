@@ -5,13 +5,31 @@ using UnityEngine.UI;
 
 public class TileManager : MonoBehaviour
 {
-    // Start is called before the first frame update
-    public GameObject tile;
-    [SerializeField]
-    private List<GameObject> tiles = new List<GameObject>();
-    int[] test = new int[9];
-    private float x = 0;
-    private float y = 0;
+
+    #region Declarations 
+
+    public static TileManager instance; // singleton
+    public GameObject tile; //Prefab of a tile
+    private List<GameObject> tiles = new List<GameObject>(); // list of tiles
+    private int[] testSolvable = new int[9]; // to check if the puzzle is solvable
+    private float x1 = 0;
+    private float y1 = 0;
+
+    #endregion
+
+    #region Unity Functions 
+
+    void Awake()
+    {
+        if (instance != null)
+        {
+            Destroy(gameObject);
+        }
+        else
+        {
+            instance = this;
+        }
+    }
 
     void Start()
     {
@@ -21,10 +39,17 @@ public class TileManager : MonoBehaviour
         {
             Shuffle();
         }
-        Debug.Log(IsItSolvable());
-
+    }
+    private void Update()
+    {
+        WinCheat();
     }
 
+    #endregion
+
+    #region Main Functions 
+
+    //Function to create,Set all tiles and create the empty one
     private void CreateAllTiles()
     {
 
@@ -38,9 +63,9 @@ public class TileManager : MonoBehaviour
             {
                 CreateTile("Apple/" + (i + 1), i);
             }
-            else
+            else if (Application.isEditor)
             {
-                CreateTile("Android/" + (i + 1), i);
+                CreateTile("Apple/" + (i + 1), i);
             }
         }
 
@@ -48,29 +73,32 @@ public class TileManager : MonoBehaviour
         emptySpace.name = "EmptySpace";
         emptySpace.GetComponent<SpriteRenderer>().sprite = null;
         emptySpace.GetComponent<Tile>().SetEmptySpace(true);
-
-
     }
 
+
+    //function to create a Tile
     private void CreateTile(string path, int countLoop)
     {
         GameObject newTile = Object.Instantiate(tile);
         newTile.name = "Tile" + countLoop;
         newTile.transform.SetParent(this.transform);
-        newTile.transform.position = new Vector3(x, y, 0);
+        newTile.transform.position = new Vector3(x1, y1, 0);
         newTile.GetComponent<SpriteRenderer>().sprite = Resources.Load<Sprite>(path);
-        if (x == 10.24f)
+        if (x1 == 10.24f)
         {
-            x = 0;
-            y = y - 5.12f;
+            x1 = 0;
+            y1 = y1 - 5.12f;
         }
         else
         {
-            x = x + 5.12f;
+            x1 = x1 + 5.12f;
         }
+        newTile.GetComponent<Tile>().SetCorrectPosition(newTile.transform.position);
         tiles.Add(newTile);
     }
 
+
+    //function to shuffle
     void Shuffle()
     {
         for (int i = 0; i < 9; i++)
@@ -86,11 +114,13 @@ public class TileManager : MonoBehaviour
                 tiles[i] = tiles[randomIndex];
                 tiles[randomIndex] = tile;
 
-                test[i] = randomIndex;
+                testSolvable[i] = randomIndex;
             }
         }
     }
 
+
+    // function to check if the puzzle is solvable
     bool IsItSolvable()
     {
         int count = 0;
@@ -98,14 +128,50 @@ public class TileManager : MonoBehaviour
         {
             for (int j = i + 1; j < 9; j++)
             {
-                if (test[i] > test[j])
+                if (testSolvable[i] > testSolvable[j])
                 {
                     count++;
                 }
 
             }
         }
-        Debug.Log(count);
         return count % 2 == 0;
     }
+
+    // check if the puzzle is finish
+    public void checkIfIsWin()
+    {
+        bool isWin = true;
+        foreach (var tile in tiles)
+        {
+            Tile currentTile = tile.GetComponent<Tile>();
+            if (!currentTile.CheckIsPositionEqualToCorrectPosition())
+            {
+                isWin = false;
+                break;
+            }
+        }
+        if (isWin)
+        {
+            Debug.Log("you win");
+            ScoreManager.instance.SetIsTimerOn(false);
+            ScoreManager.instance.LoadSceneHome();
+        }
+
+    }
+
+    // just a cheat for the dev :)
+    void WinCheat()
+    {
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            foreach (var tile in tiles)
+            {
+                tile.transform.position = tile.GetComponent<Tile>().GetCorrectPosition();
+            }
+            checkIfIsWin();
+        }
+    }
+
+    #endregion
 }
