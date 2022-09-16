@@ -1,0 +1,4 @@
+interface IClick
+{
+    void Click();
+}

@@ -1,0 +1,4 @@
+interface IRelease
+{
+    void Release();
+}
